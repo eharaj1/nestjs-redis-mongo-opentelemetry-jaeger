@@ -11,7 +11,7 @@ describe('CatsService', () => {
     let service: CatsService;
     let model: typeof mappingModel;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const app: TestingModule = await Test.createTestingModule({
         providers: [CatsService, {provide: getModelToken('Cats'), useValue: mappingModel}],
     }).compile();
@@ -38,7 +38,8 @@ describe('CatsService', () => {
     it('should return all cats', async() => {
         model.find.mockResolvedValue(catsData);
         const res = await service.getAll();
-        expect(res).toEqual({ data: catsData })
+
+        expect(res).toMatchObject({ data: catsData })
         expect(model.find).toHaveBeenCalledTimes(1);
     });
 
@@ -47,8 +48,8 @@ describe('CatsService', () => {
         try{
             await service.getAll();
           }catch(e){
-            expect(e.message).toBe('records not found');
-            expect(model.find).toHaveBeenCalledTimes(1);
+            expect(e.message).toBe('Record not found.');
+            expect(model.find).toHaveBeenCalledTimes(2);
           }
       });
 
