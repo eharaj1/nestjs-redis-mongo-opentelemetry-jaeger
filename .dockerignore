@@ -1,0 +1,18 @@
+# Exclude everything:
+#
+*
+
+# Now un-exclude required files or folders:
+#
+# required for building app
+!.npmrc
+!package*.json
+!src
+!tsconfig*.json
+!dist
+!node_modules
+# required during runtime
+!newrelic.js
+!config
+!swagger*.json
+!.sops.yaml
