@@ -2,19 +2,39 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CatsController } from './cats.controller';
 import { CatsService } from './cats.service';
 import { getModelToken } from '@nestjs/mongoose';
+
 import { RedisService } from '../../shared/lib/redis/redis.service';
-import {RedisModule} from "../../shared/lib/redis/redis.module";
-const REDIS_MODULE_OPTIONS = Symbol('REDIS_MODULE_OPTIONS');
-const REDIS_CLIENT = Symbol('REDIS_CLIENT');
+import {REDIS_CLIENT} from "../../shared/lib/redis/redis.constants";
+
 describe('CatsController', () => {
     let controller: CatsController;
     let service: CatsService;
     
-  beforeEach(async () => {
+  beforeAll(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      //imports: [RedisModule],
+      imports: [],
       controllers: [CatsController],
-      providers: [CatsService, RedisModule,   RedisService , { provide: getModelToken('Cats'), useValue: { Symbol: jest.fn()} }],
+      providers: [
+        CatsService, 
+        { 
+          provide: getModelToken('Cats'), 
+          useValue: { Symbol: jest.fn()} 
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            get: jest.fn(),
+            getClient: jest.fn().mockReturnValue(REDIS_CLIENT),
+          }
+        },
+        {
+          provide: REDIS_CLIENT,
+          useValue: {
+            get: jest.fn().mockReturnValue('foo'),
+            keys: jest.fn().mockReturnValue(['foo', 'bar']),
+          }
+        }
+      ],
     }).compile();
 
     controller = app.get<CatsController>(CatsController);
@@ -35,9 +55,10 @@ describe('CatsController', () => {
 
 
     it('should return all cats', async() => {
-        jest.spyOn(service, 'getAll').mockResolvedValue({data: catsData, success: true})
-        const catsList = await controller.findAll()
-      expect(catsList).toBe({data: catsData, success: true});
+      jest.spyOn(service, 'getAll').mockResolvedValue({data: catsData, success: true})
+      const catsList = await controller.findAll();
+        
+      expect(catsList).toMatchObject({data: catsData, success: true});
     });
 
     it('should throw error record not found', async() => {
